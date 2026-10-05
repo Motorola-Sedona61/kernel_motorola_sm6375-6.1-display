@@ -6529,7 +6529,7 @@ int dsi_panel_enable(struct dsi_panel *panel)
 
 	ktime_get_real_ts64(&timestampEnd);
 	dts = timespec64_sub(timestampEnd, timestampStart);
-	DSI_INFO("-: no_panel_on_read_support=%d, panel_power_cnt=%d, took %ld ms\n",
+	DSI_INFO("-: no_panel_on_read_support=%d, panel_power_cnt=%d, took %lld ms\n",
 		panel->no_panel_on_read_support, panel->panel_power_cnt, timespec64_to_ns(&dts)/1000000);
 
 	panel->panel_initialized = true;

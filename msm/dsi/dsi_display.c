@@ -270,7 +270,7 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 		(panel->bl_config.bl_level && !bl_lvl) ||
 		(nowtimejiffies - lasttimejiffies) > 500 ||
 		lastTrend != curTrend) {
-		pr_info("set_backlight from %u to %u, Trend[cur:last=%d:%d], max[bl:brightness:thermal=%d:%d:%d], for %s\n",
+		pr_info("set_backlight from %u to %u, Trend[cur:last=%d:%d], max[bl:brightness:thermal=%d:%d:%lu], for %s\n",
 		        (u32)(panel->bl_config.bl_level), (u32)bl_lvl, curTrend, lastTrend, panel->bl_config.bl_max_level,
 		        panel->bl_config.brightness_max_level, c_conn->thermal_max_brightness, panel->name);
 		lasttimejiffies = nowtimejiffies;
@@ -289,7 +289,7 @@ int dsi_display_set_backlight(struct drm_connector *connector,
 	/* use bl_temp as index of dimming bl lut to find the dimming panel backlight */
 	if (bl_temp != 0 && panel->bl_config.dimming_bl_lut &&
 	    bl_temp < panel->bl_config.dimming_bl_lut->length) {
-		DSI_DEBUG("before dimming bl_temp = %u, after dimming bl_temp = %lu\n",
+		DSI_DEBUG("before dimming bl_temp = %llu, after dimming bl_temp = %u\n",
 			bl_temp, panel->bl_config.dimming_bl_lut->mapped_bl[bl_temp]);
 		bl_temp = panel->bl_config.dimming_bl_lut->mapped_bl[bl_temp];
 	}
@@ -690,7 +690,7 @@ static void dsi_display_parse_demura_data(struct dsi_display *display)
 		DSI_DEBUG("Dummy panel ID node present for this display\n");
 		display->panel_id = ~0x0;
 	} else {
-		DSI_DEBUG("panel id found: %lx\n", display->panel_id);
+		DSI_DEBUG("panel id found: %llx\n", display->panel_id);
 	}
 }
 
@@ -9998,7 +9998,7 @@ int dsi_display_update_dyn_bit_clk(struct dsi_display *display,
 		DSI_DEBUG("dynamic bit clock rate cleared\n");
 		return 0;
 	} else if (display->dyn_bit_clk < mode->priv_info->min_dsi_clk_hz) {
-		DSI_ERR("dynamic bit clock rate %llu smaller than minimum value:%llu\n",
+		DSI_ERR("dynamic bit clock rate %u smaller than minimum value:%llu\n",
 				display->dyn_bit_clk, mode->priv_info->min_dsi_clk_hz);
 		return -EINVAL;
 	}
