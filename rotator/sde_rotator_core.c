@@ -614,7 +614,7 @@ static int sde_rotator_secure_session_ctrl(bool enable)
 			}
 
 			SDEROT_DBG(
-			  "scm(1) sid0x%x dev0x%llx vmid0x%llx qtee_en%d ret%d\n",
+			  "scm(1) sid0x%x dev0x%x vmid0x%x qtee_en%d ret%d\n",
 				sid_info[0], SDE_ROTATOR_DEVICE, vmid,
 				qtee_en, ret);
 			SDEROT_EVTLOG(1, sid_info, sid_info[0], SDE_ROTATOR_DEVICE,
@@ -634,7 +634,7 @@ static int sde_rotator_secure_session_ctrl(bool enable)
 				SDEROT_ERR("qcom_scm_mem_protect ret=%d\n", ret);
 
 			SDEROT_DBG(
-			  "scm(0) sid0x%x dev0x%llx vmid0x%llx qtee_en%d ret%d\n",
+			  "scm(0) sid0x%x dev0x%x vmid0x%x qtee_en%d ret%d\n",
 				sid_info[0], SDE_ROTATOR_DEVICE, vmid,
 				qtee_en, ret);
 
