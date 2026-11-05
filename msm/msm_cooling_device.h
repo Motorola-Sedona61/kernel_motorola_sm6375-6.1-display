@@ -17,7 +17,6 @@ struct sde_cdev {
 	struct thermal_cooling_device *cdev;
 	struct backlight_device *bd;
 	unsigned long thermal_state;
-	unsigned int cdev_sf;
 };
 
 #if IS_ENABLED(CONFIG_THERMAL_OF)
