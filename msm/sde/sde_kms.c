@@ -4689,12 +4689,16 @@ static void sde_kms_handle_power_event(u32 event_type, void *usr)
 static int sde_kms_pd_enable(struct generic_pm_domain *genpd)
 {
 	struct sde_kms *sde_kms = genpd_to_sde_kms(genpd);
-	int rc = -EINVAL;
+	struct device *dev = sde_kms->dev->dev;
+	int rc = 0;
 
 	SDE_DEBUG("\n");
 
-	rc = pm_runtime_resume_and_get(sde_kms->dev->dev);
-	rc = (rc > 0) ? 0 : rc;
+	/* Retain the domain vote while runtime PM is disabled for system sleep. */
+	if (pm_runtime_enabled(dev))
+		rc = pm_runtime_resume_and_get(dev);
+	else
+		pm_runtime_get_noresume(dev);
 
 	SDE_EVT32(rc, genpd->device_count);
 
