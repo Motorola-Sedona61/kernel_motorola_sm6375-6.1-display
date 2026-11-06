@@ -501,28 +501,28 @@ static void dsi_display_change_te_irq_status(struct dsi_display *display,
 	}
 }
 
-static void dsi_display_register_te_irq(struct dsi_display *display)
+static int dsi_display_register_te_irq(struct dsi_display *display)
 {
 	int rc = 0;
 	struct platform_device *pdev;
 	struct device *dev;
-	unsigned int te_irq;
+	int te_irq;
 
 	pdev = display->pdev;
 	if (!pdev) {
 		DSI_ERR("invalid platform device\n");
-		return;
+		return -EINVAL;
 	}
 
 	dev = &pdev->dev;
 	if (!dev) {
 		DSI_ERR("invalid device\n");
-		return;
+		return -EINVAL;
 	}
 
 	if (display->trusted_vm_env) {
 		DSI_INFO("GPIO's are not enabled in trusted VM\n");
-		return;
+		return -EOPNOTSUPP;
 	}
 
 	if (!gpio_is_valid(display->disp_te_gpio)) {
@@ -532,6 +532,10 @@ static void dsi_display_register_te_irq(struct dsi_display *display)
 
 	init_completion(&display->esd_te_gate);
 	te_irq = gpio_to_irq(display->disp_te_gpio);
+	if (te_irq < 0) {
+		rc = te_irq;
+		goto error;
+	}
 
 	/* Avoid deferred spurious irqs with disable_irq() */
 	irq_set_status_flags(te_irq, IRQ_DISABLE_UNLAZY);
@@ -548,7 +552,7 @@ static void dsi_display_register_te_irq(struct dsi_display *display)
 	disable_irq(te_irq);
 	display->is_te_irq_enabled = false;
 
-	return;
+	return 0;
 
 error:
 	/* disable the TE based ESD check */
@@ -556,6 +560,7 @@ error:
 	if (display->panel->esd_config.status_mode == ESD_MODE_PANEL_TE ||
 			display->panel->esd_config.status_mode == ESD_MODE_TE_CHK_REG_RD)
 		display->panel->esd_config.esd_enabled = false;
+	return rc;
 }
 
 /* Allocate memory for cmd dma tx buffer */
@@ -992,21 +997,24 @@ static void dsi_display_release_te_irq(struct dsi_display *display)
 	int te_irq = 0;
 
 	te_irq = gpio_to_irq(display->disp_te_gpio);
-	if (te_irq)
-		free_irq(te_irq, display);
+	if (te_irq >= 0)
+		devm_free_irq(&display->pdev->dev, te_irq, display);
 }
 
 static int dsi_display_status_check_te(struct dsi_display *display,
 		int rechecks)
 {
 	int rc = 1, i = 0;
+	int ret;
 	int const esd_te_timeout = msecs_to_jiffies(3*20);
 
 	if (!rechecks)
 		return rc;
 
 	/* register te irq handler */
-	dsi_display_register_te_irq(display);
+	ret = dsi_display_register_te_irq(display);
+	if (ret)
+		return ret;
 
 	dsi_display_change_te_irq_status(display, true);
 
@@ -1015,8 +1023,8 @@ static int dsi_display_status_check_te(struct dsi_display *display,
 		if (!wait_for_completion_timeout(&display->esd_te_gate,
 					esd_te_timeout)) {
 			DSI_ERR("TE check failed\n");
-			dsi_display_change_te_irq_status(display, false);
-			return -EINVAL;
+			rc = -EINVAL;
+			break;
 		}
 	}
 
